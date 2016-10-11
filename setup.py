@@ -10,6 +10,6 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'anz.casclient>=1.0.1',
+        'anz.casclient == 1.0.1',
     ]
 )
