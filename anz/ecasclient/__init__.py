@@ -9,6 +9,7 @@ from Products.PluggableAuthService.PluggableAuthService import \
 from anz.ecasclient.ecasclient import AnzECASClient, \
      manage_addAnzECASClient, addAnzECASClientForm
 
+from anz.ecasclient import patches
 # register plugins with pas
 try:
     registerMultiPlugin( AnzECASClient.meta_type )
