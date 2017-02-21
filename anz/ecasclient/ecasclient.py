@@ -100,10 +100,10 @@ class AnzECASClient(AnzCASClient):
         if userdb:
             for ecas_id, user in self._ecas_id.iteritems():
                 if isEmail(username):
-                    if user.email == username:
+                    if user.email.lower() == username.lower():
                         return ecas_id
                 else:
-                    if user.username == username:
+                    if user.username == username.lower():
                         return ecas_id
 
     security.declarePrivate( 'challenge' )
