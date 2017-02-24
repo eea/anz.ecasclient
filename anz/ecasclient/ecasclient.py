@@ -168,6 +168,8 @@ class AnzECASClient(AnzCASClient):
             ecas._ecas_id[ecas_id] = ecas_user
         elif not ecas_user.email and isEmail(username):
             ecas_user._email = username
+        elif isEmail(username) and ecas_user.email != username:
+            ecas_user._email = username
         elif not ecas_user.username and not isEmail(username):
             ecas_user._username = username
         else:
