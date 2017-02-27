@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='anz.ecasclient',
-    version='0.9.3',
+    version='0.9.4',
     author='Eau de Web',
     author_email='office@eaudeweb.ro',
     url='http://www.eaudeweb.ro',
