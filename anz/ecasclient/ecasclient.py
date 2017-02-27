@@ -106,6 +106,24 @@ class AnzECASClient(AnzCASClient):
                     if user.username == username.lower():
                         return ecas_id
 
+    def getEcasIDUser(self, ecas_id):
+        """Return internal user mapping for the ecas_id.
+        """
+        userdb = getattr(self, '_ecas_id', {})
+        return userdb.get(ecas_id)
+
+    def getEcasIDEmail(self, ecas_id):
+        """Return ecas user's email."""
+        ecas_user = self.getEcasIDUser(ecas_id)
+        if ecas_user:
+            return ecas_user.email
+
+    def getEcasIDUsername(self, ecas_id):
+        """Return ecas user's username."""
+        ecas_user = self.getEcasIDUser(ecas_id)
+        if ecas_user:
+            return ecas_user.username
+
     security.declarePrivate( 'challenge' )
     def challenge( self, request, response, **kw ):
         if request['QUERY_STRING']:
