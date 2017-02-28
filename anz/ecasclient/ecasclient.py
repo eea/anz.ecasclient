@@ -179,11 +179,31 @@ class AnzECASClient(AnzCASClient):
         """
         return user, info
 
+    def invalidateOlderMapping(self, c_ecas_id, username):
+        """Invalidate older mapping."""
+        userdb = getattr(self, '_ecas_id', None)
+        res = []
+        if userdb:
+            for ecas_id, user in self._ecas_id.iteritems():
+                if ecas_id != c_ecas_id:
+                    if isEmail(username):
+                        if user.email and user.email.lower() == username.lower():
+                            user._email = None
+                            res.append(ecas_id)
+                    else:
+                        if user.username == username:
+                            user._username = None
+                            res.append(ecas_id)
+        return res
+
     def mapUser(self, ecas, ecas_id, username):
         ecas_user = ecas._ecas_id.get(ecas_id)
         if not ecas_user:
             ecas_user = EcasClient(ecas_id, username)
             ecas._ecas_id[ecas_id] = ecas_user
+            res = self.invalidateOlderMapping(ecas_id, username)
+            if res:
+                LOG.debug("Invalidated data for ecas id: {}".format(res))
         elif not ecas_user.email and isEmail(username):
             ecas_user._email = username
         elif isEmail(username) and ecas_user.email != username:
@@ -215,8 +235,8 @@ class AnzECASClient(AnzCASClient):
 
                 self.mapUser(ecas, ecas_id, username)
 
-            except:
-                LOG.warning("Error getting username")
+            except Exception as e:
+                LOG.warning("Error getting username: {}".format(str(e)))
         return creds
 
 classImplements(AnzCASClient,
