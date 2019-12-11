@@ -1,27 +1,26 @@
-from logging import getLogger
-import urllib2
 import re
+import urllib2
+from logging import getLogger
 
-# zope imports
-from zope.interface import implements
-from Globals import InitializeClass
-from AccessControl import getSecurityManager, ClassSecurityInfo
-from Products.PluggableAuthService.utils import classImplements
-from Products.PluggableAuthService.interfaces.plugins import \
-        IExtractionPlugin, IChallengePlugin, IAuthenticationPlugin, \
-        ICredentialsResetPlugin, ICredentialsUpdatePlugin
-from Products.PageTemplates.PageTemplateFile import PageTemplateFile
-from ZODB.PersistentMapping import PersistentMapping
-from persistent import Persistent
-from Products.Reportek.constants import ENGINE_ID, ECAS_ID
-
+from AccessControl import ClassSecurityInfo, getSecurityManager
+from anz.casclient.casclient import AnzCASClient
 # original CAS imports
 from anz.casclient.interfaces import IAnzCASClient
-from anz.casclient.casclient import AnzCASClient
-from anz.casclient.validationspecification import Cas10TicketValidator, Cas20ProxyTicketValidator
-
+from anz.casclient.validationspecification import (Cas10TicketValidator,
+                                                   Cas20ProxyTicketValidator)
+from Globals import InitializeClass
+from persistent import Persistent
+from Products.PageTemplates.PageTemplateFile import PageTemplateFile
+from Products.PluggableAuthService.interfaces.plugins import (
+    IAuthenticationPlugin, IChallengePlugin, ICredentialsResetPlugin,
+    ICredentialsUpdatePlugin, IExtractionPlugin)
+from Products.PluggableAuthService.utils import classImplements
+from Products.Reportek.constants import ECAS_ID, ENGINE_ID
 # eCAS imports
 from validationspecification import ECas20ServiceTicketValidator
+from ZODB.PersistentMapping import PersistentMapping
+# zope imports
+from zope.interface import implements
 
 LOG = getLogger( 'anz.ecasclient' )
 
@@ -76,6 +75,7 @@ class AnzECASClient(AnzCASClient):
     meta_type = 'Anz eCAS Client'
 
     casServerValidationUrl = ''
+    internalMapping = True
 
     security = ClassSecurityInfo()
 
@@ -89,6 +89,12 @@ class AnzECASClient(AnzCASClient):
             'type': 'string',
             'mode': 'w'
         },
+        {
+            'id': 'internalMapping',
+            'label': 'Use internal mapping for usernames',
+            'type': 'boolean',
+            'mode': 'w'
+        }
     )
 
     def __init__( self, id, title ):
@@ -97,7 +103,7 @@ class AnzECASClient(AnzCASClient):
 
     def getEcasUserId(self, username):
         userdb = getattr(self, '_ecas_id', None)
-        if userdb:
+        if userdb and self.internalMapping:
             for ecas_id, user in self._ecas_id.iteritems():
                 if isEmail(username):
                     if user.email and user.email.lower() == username.lower():
@@ -105,6 +111,7 @@ class AnzECASClient(AnzCASClient):
                 else:
                     if user.username == username:
                         return ecas_id
+        return username
 
     def getEcasIDUser(self, ecas_id):
         """Return internal user mapping for the ecas_id.
@@ -219,7 +226,8 @@ class AnzECASClient(AnzCASClient):
         assert sdm is not None, 'No session data manager found!'
         session = sdm.getSessionData( create=0 )
         assertion = self.getAssertion( session )
-        if assertion:
+
+        if assertion and self.internalMapping:
             try:
                 ecas = self.unrestrictedTraverse('/'+ENGINE_ID+'/acl_users/'+ECAS_ID)
                 username = assertion.principal.id
