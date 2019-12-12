@@ -111,6 +111,13 @@ class AnzECASClient(AnzCASClient):
                 else:
                     if user.username == username:
                         return ecas_id
+        else:
+            try:
+                assertion = self.getAssertionFromSession()
+                ecas_id = assertion.principal.ecas_id
+                return ecas_id
+            except Exception:
+                pass
         return username
 
     def getEcasIDUser(self, ecas_id):
@@ -220,12 +227,17 @@ class AnzECASClient(AnzCASClient):
         else:
             LOG.debug("User %s already mapped in %s app" % (username, ECAS_ID))
 
-    def extractCredentials(self, request):
-        creds = super(AnzECASClient, self).extractCredentials(request)
+    def getAssertionFromSession(self):
         sdm = getattr( self, 'session_data_manager', None )
         assert sdm is not None, 'No session data manager found!'
         session = sdm.getSessionData( create=0 )
         assertion = self.getAssertion( session )
+
+        return assertion
+
+    def extractCredentials(self, request):
+        creds = super(AnzECASClient, self).extractCredentials(request)
+        assertion = self.getAssertionFromSession()
 
         if assertion and self.internalMapping:
             try:
