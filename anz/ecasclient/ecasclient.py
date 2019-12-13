@@ -128,9 +128,13 @@ class AnzECASClient(AnzCASClient):
 
     def getEcasIDEmail(self, ecas_id):
         """Return ecas user's email."""
-        ecas_user = self.getEcasIDUser(ecas_id)
-        if ecas_user:
-            return ecas_user.email
+        if self.internalMapping:
+            ecas_user = self.getEcasIDUser(ecas_id)
+            if ecas_user:
+                return ecas_user.email
+        else:
+            # We cannot retrieve the user's email if we don't use the mapping
+            return "Internal ECAS mapping disabled"
 
     def getEcasIDUsername(self, ecas_id):
         """Return ecas user's username."""
